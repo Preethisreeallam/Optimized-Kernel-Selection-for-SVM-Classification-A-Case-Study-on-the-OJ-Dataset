@@ -1,0 +1,369 @@
+---
+title: "Optimized Kernel Selection for SVM Classification: A Case Study on the OJ Dataset"
+author: "Preethi Sree Allam"
+date: "2023-04-28"
+output: html_document
+---
+
+# Support Vector Classifier
+```{r}
+set.seed(1)
+x <- matrix(rnorm(20 * 2), ncol = 2)
+y <- c(rep(-1, 10), rep(1, 10))
+x[y == 1, ] <- x[y == 1, ] + 1
+plot(x, col = (3 - y))
+dat <- data.frame(x = x, y = as.factor(y))
+library(e1071)
+svmfit <- svm(y ~ ., data = dat, kernel = "linear", 
+              cost = 10, scale = FALSE)
+plot(svmfit, dat)
+svmfit$index
+summary(svmfit)
+svmfit <- svm(y ~ ., data = dat, kernel = "linear", 
+              cost = 0.1, scale = FALSE)
+plot(svmfit, dat)
+svmfit$index
+set.seed(1)
+tune.out <- tune(svm, y ~ ., data = dat, kernel = "linear", 
+                 ranges = list(cost = c(0.001, 0.01, 0.1, 1, 5, 10, 100)))
+summary(tune.out)
+bestmod <- tune.out$best.model
+summary(bestmod)
+xtest <- matrix(rnorm(20 * 2), ncol = 2)
+ytest <- sample(c(-1, 1), 20, rep = TRUE)
+xtest[ytest == 1, ] <- xtest[ytest == 1, ] + 1
+testdat <- data.frame(x = xtest, y = as.factor(ytest))
+ypred <- predict(bestmod, testdat)
+table(predict = ypred, truth = testdat$y)
+svmfit <- svm(y ~ ., data = dat, kernel = "linear", 
+              cost = .01, scale = FALSE)
+ypred <- predict(svmfit, testdat)
+table(predict = ypred, truth = testdat$y)
+x[y == 1, ] <- x[y == 1, ] + 0.5
+plot(x, col = (y + 5) / 2, pch = 19)
+dat <- data.frame(x = x, y = as.factor(y))
+svmfit <- svm(y ~ ., data = dat, kernel = "linear", 
+              cost = 1e5)
+summary(svmfit)
+plot(svmfit, dat)
+svmfit <- svm(y ~ ., data = dat, kernel = "linear", cost = 1)
+summary(svmfit)
+plot(svmfit, dat)
+```
+# Support Vector Machine
+```{r}
+set.seed(1)
+x <- matrix(rnorm(200 * 2), ncol = 2)
+x[1:100, ] <- x[1:100, ] + 2
+x[101:150, ] <- x[101:150, ] - 2
+y <- c(rep(1, 150), rep(2, 50))
+dat <- data.frame(x = x, y = as.factor(y))
+plot(x, col = y)
+train <- sample(200, 100)
+svmfit <- svm(y ~ ., data = dat[train, ], kernel = "radial",  
+              gamma = 1, cost = 1)
+plot(svmfit, dat[train, ])
+summary(svmfit)
+svmfit <- svm(y ~ ., data = dat[train, ], kernel = "radial", 
+              gamma = 1, cost = 1e5)
+plot(svmfit, dat[train, ])
+set.seed(1)
+tune.out <- tune(svm, y ~ ., data = dat[train, ], 
+                 kernel = "radial", 
+                 ranges = list(
+                   cost = c(0.1, 1, 10, 100, 1000),
+                   gamma = c(0.5, 1, 2, 3, 4)
+                 )
+)
+summary(tune.out)
+table(
+  true = dat[-train, "y"], 
+  pred = predict(
+    tune.out$best.model, newdata = dat[-train, ]
+  )
+)
+
+```
+# SVM with Multiple Classes
+```{r}
+set.seed(1)
+x <- rbind(x, matrix(rnorm(50 * 2), ncol = 2))
+y <- c(y, rep(0, 50))
+x[y == 0, 2] <- x[y == 0, 2] + 2
+dat <- data.frame(x = x, y = as.factor(y))
+par(mfrow = c(1, 1))
+plot(x, col = (y + 1))
+svmfit <- svm(y ~ ., data = dat, kernel = "radial", 
+              cost = 10, gamma = 1)
+plot(svmfit, dat)
+```
+
+
+
+# 1
+```{r}
+plot(NA, NA, type = "n", xlim = c(-4, 2), ylim = c(-1, 5), asp = 1, xlab = "X1", ylab = "X2")
+symbols(c(-1), c(2), circles = c(2), add = TRUE, inches = FALSE)
+```
+
+
+
+
+# 2
+## 2.1
+```{r}
+x1 = c(3, 2, 4, 1, 2, 4, 4)
+x2 = c(4, 2, 4, 4, 1, 3, 1)
+colors = c("red", "red", "red", "red", "blue", "blue", "blue")
+plot(x1, x2, col = colors, xlim = c(0, 5), ylim = c(0, 5))
+```
+
+
+## 2.2
+```{r}
+plot(x1, x2, col = colors, xlim = c(0, 5), ylim = c(0, 5))
+abline(-0.5, 1)
+```
+
+
+
+## 2.3
+
+###     The classification rule is “Classify to Red if X1−X2−0.5<0, and classify to Blue otherwise.
+
+
+## 2.4
+```{r}
+plot(x1, x2, col = colors, xlim = c(0, 5), ylim = c(0, 5))
+abline(-0.5, 1)
+abline(-1, 1, lty = 2)
+abline(0, 1, lty = 2)
+```
+
+
+
+###     The margin is here equal to 1/4
+
+## 2.4
+
+
+###      The support vectors are the points (2,1), (2,2), (4,3) and (4,4).
+
+## 2.5
+
+
+###      By examining the plot, it is clear that if we moved the observation (4,1), we would not change the maximal margin hyperplane as it is not a support vector.
+
+## 2.6
+```{r}
+plot(x1, x2, col = colors, xlim = c(0, 5), ylim = c(0, 5))
+abline(-0.3, 1)
+```
+
+## 2.7
+```{r}
+plot(x1, x2, col = colors, xlim = c(0, 5), ylim = c(0, 5))
+points(c(3), c(1), col = c("red"))
+```
+
+
+###    When the red point (3,1) is added to the plot, the two classes are obviously not separable by a hyperplane anymore.
+
+# 3
+
+## 3.1
+```{r}
+set.seed(1)
+x1 <- runif(500) - 0.5
+x2 <- runif(500) - 0.5
+y <- 1 * (x1^2 - x2^2 > 0)
+
+```
+## 3.2
+```{r}
+plot(x1, x2, xlab = "X1", ylab = "X2", col = (4 - y), pch = (3 - y))
+```
+## 3.3
+```{r}
+logit.fit <- glm(y ~ x1 + x2, family = "binomial")
+summary(logit.fit)
+```
+
+###     None of the variables are statistically significants.
+## 3.4
+```{r}
+data <- data.frame(x1 = x1, x2 = x2, y = y)
+probs <- predict(logit.fit, data, type = "response")
+preds <- rep(0, 500)
+preds[probs > 0.47] <- 1
+plot(data[preds == 1, ]$x1, data[preds == 1, ]$x2, col = (4 - 1), pch = (3 - 1), xlab = "X1", ylab = "X2")
+points(data[preds == 0, ]$x1, data[preds == 0, ]$x2, col = (4 - 0), pch = (3 - 0))
+
+```
+
+
+###      The decision boundary is obviously linear.
+## 3.5
+```{r}
+logitnl.fit <- glm(y ~ poly(x1, 2) + poly(x2, 2) + I(x1 * x2), family = "binomial")
+summary(logitnl.fit)
+```
+
+
+###     Here again, none of the variables are statistically significants.
+## 3.6
+```{r}
+probs <- predict(logitnl.fit, data, type = "response")
+preds <- rep(0, 500)
+preds[probs > 0.47] <- 1
+plot(data[preds == 1, ]$x1, data[preds == 1, ]$x2, col = (4 - 1), pch = (3 - 1), xlab = "X1", ylab = "X2")
+points(data[preds == 0, ]$x1, data[preds == 0, ]$x2, col = (4 - 0), pch = (3 - 0))
+```
+
+
+###     The non-linear decision boundary is surprisingly very similar to the true decision boundary.
+## 3.7
+```{r}
+data$y <- as.factor(data$y)
+svm.fit <- svm(y ~ x1 + x2, data, kernel = "linear", cost = 0.01)
+preds <- predict(svm.fit, data)
+plot(data[preds == 0, ]$x1, data[preds == 0, ]$x2, col = (4 - 0), pch = (3 - 0), xlab = "X1", ylab = "X2")
+points(data[preds == 1, ]$x1, data[preds == 1, ]$x2, col = (4 - 1), pch = (3 - 1))
+```
+
+
+###      This support vector classifier (even with low cost) classifies all points to a single class.
+## 3.8
+```{r}
+data$y <- as.factor(data$y)
+svmnl.fit <- svm(y ~ x1 + x2, data, kernel = "radial", gamma = 1)
+preds <- predict(svmnl.fit, data)
+plot(data[preds == 0, ]$x1, data[preds == 0, ]$x2, col = (4 - 0), pch = (3 - 0), xlab = "X1", ylab = "X2")
+points(data[preds == 1, ]$x1, data[preds == 1, ]$x2, col = (4 - 1), pch = (3 - 1))
+```
+
+
+###    Here again, the non-linear decision boundary is surprisingly very similar to the true decision boundary.
+
+## 3.9
+
+
+###   We may conclude that SVM with non-linear kernel and logistic regression with interaction terms are equally very powerful for finding non-linear decision boundaries. Also, SVM with linear kernel and logistic regression without any interaction term are very bad when it comes to finding non-linear decision boundaries. However, one argument in favor of SVM is that it requires some manual tuning to find the right interaction terms when using logistic regression, although when using SVM we only need to tune gamma.
+
+# 4
+
+## 4.1
+```{r}
+library(ISLR)
+attach(OJ)
+set.seed(1)
+train <- sample(nrow(OJ), 800)
+OJ.train <- OJ[train, ]
+OJ.test <- OJ[-train, ]
+```
+## 4.2
+```{r}
+svm.linear <- svm(Purchase ~ ., data = OJ.train, kernel = "linear", cost = 0.01)
+summary(svm.linear)
+```
+
+###   Support vector classifier creates 432 support vectors out of 800 training points. Out of these, 217 belong to level MM and remaining 215 belong to level CH.
+## 4.3
+```{r}
+train.pred <- predict(svm.linear, OJ.train)
+table(OJ.train$Purchase, train.pred)
+(78 + 55) / (439 + 228 + 78 + 55)
+test.pred <- predict(svm.linear, OJ.test)
+table(OJ.test$Purchase, test.pred)
+(31 + 18) / (141 + 80 + 31 + 18)
+```
+
+
+###    The training error rate is 16.6% and test error rate is about 18.1%
+## 4.4
+```{r}
+set.seed(2)
+tune.out <- tune(svm, Purchase ~ ., data = OJ.train, kernel = "linear", ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
+summary(tune.out)
+```
+
+###    We may see that the optimal cost is 0.1.
+## 4.5
+```{r}
+svm.linear <- svm(Purchase ~ ., kernel = "linear", data = OJ.train, cost = tune.out$best.parameter$cost)
+train.pred <- predict(svm.linear, OJ.train)
+table(OJ.train$Purchase, train.pred)
+(71 + 56) / (438 + 235 + 71 + 56)
+test.pred <- predict(svm.linear, OJ.test)
+table(OJ.test$Purchase, test.pred)
+(32 + 19) / (140 + 79 + 32 + 19)
+```
+
+###    We may see that, with the best cost, the training error rate is now 15.8% and the test error rate is 18.8%.
+## 4.6
+```{r}
+svm.radial <- svm(Purchase ~ ., kernel = "radial", data = OJ.train)
+summary(svm.radial)
+train.pred <- predict(svm.radial, OJ.train)
+table(OJ.train$Purchase, train.pred)
+(77 + 39) / (455 + 229 + 77 + 39)
+test.pred <- predict(svm.radial, OJ.test)
+table(OJ.test$Purchase, test.pred)
+(28 + 18) / (141 + 83 + 28 + 18)
+```
+
+
+###    Radial kernel with default gamma creates 379 support vectors, out of which, 188 belong to level CH and remaining 191 belong to level MM. The classifier has a training error of 14.5% and a test error of 17% which is a slight improvement over linear kernel. We now use cross validation to find optimal cost.
+
+```{r}
+set.seed(2)
+tune.out <- tune(svm, Purchase ~ ., data = OJ.train, kernel = "radial", ranges = list(cost = 10^seq(-2, 
+    1, by = 0.25)))
+summary(tune.out)
+svm.radial <- svm(Purchase ~ ., kernel = "radial", data = OJ.train, cost = tune.out$best.parameter$cost)
+summary(svm.radial)
+train.pred <- predict(svm.radial, OJ.train)
+table(OJ.train$Purchase, train.pred)
+(77 + 39) / (455 + 229 + 77 + 39)
+test.pred <- predict(svm.radial, OJ.test)
+table(OJ.test$Purchase, test.pred)
+(28 + 18) / (141 + 83 + 28 + 18)
+
+```
+
+
+###   Tuning does not reduce train and test error rates as we already used the optimal cost of 1.
+## 4.7
+```{r}
+svm.poly <- svm(Purchase ~ ., kernel = "polynomial", data = OJ.train, degree = 2)
+summary(svm.poly)
+train.pred <- predict(svm.poly, OJ.train)
+table(OJ.train$Purchase, train.pred)
+(105 + 33) / (461 + 201 + 105 + 33)
+test.pred <- predict(svm.poly, OJ.test)
+table(OJ.test$Purchase, test.pred)
+(41 + 10) / (149 + 70 + 41 + 10)
+```
+
+
+###     Polynomial kernel with default gamma creates 454 support vectors, out of which, 224 belong to level CH and remaining 230 belong to level MM. The classifier has a training error of 17.2% and a test error of 18.8% which is no improvement over linear kernel. We now use cross validation to find optimal cost.
+```{r}
+set.seed(2)
+tune.out <- tune(svm, Purchase ~ ., data = OJ.train, kernel = "polynomial", degree = 2, ranges = list(cost = 10^seq(-2, 
+    1, by = 0.25)))
+summary(tune.out)
+svm.poly <- svm(Purchase ~ ., kernel = "polynomial", degree = 2, data = OJ.train, cost = tune.out$best.parameter$cost)
+summary(svm.poly)
+train.pred <- predict(svm.poly, OJ.train)
+table(OJ.train$Purchase, train.pred)
+(72 + 44) / (450 + 234 + 72 + 44)
+test.pred <- predict(svm.poly, OJ.test)
+table(OJ.test$Purchase, test.pred)
+(31 + 19) / (140 + 80 + 31 + 19)
+```
+
+###  Tuning reduce train and test error rates.
+## 4.8
+
+
+###    Overall, radial basis kernel seems to be producing minimum misclassification error on both train and test data.
